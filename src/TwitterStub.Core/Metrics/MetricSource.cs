@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Options;
+﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -17,11 +18,13 @@ namespace TwitterStub.Core.Metrics
     {
         private readonly MetricsSettings _settings;
         private IEnumerable<Emoji> _emojis;
+        private readonly ILogger<MetricSource> _logger;
 
-        public MetricSource(IRepository repository, IOptions<MetricsSettings> settings)
+        public MetricSource(ILogger<MetricSource> logger, IRepository repository, IOptions<MetricsSettings> settings)
         {
             Repository = repository;
             _settings = settings.Value;
+            _logger = logger;
         }
 
 
@@ -46,14 +49,22 @@ namespace TwitterStub.Core.Metrics
         {
             if (_emojis == null)
             {
-                JArray o1 = JArray.Parse(await File.ReadAllTextAsync(_settings.EmojiFile));
                 var list = new List<Emoji>();
-                foreach (var item in o1)
+                try
                 {
-                    var emoji = item.ToObject<Emoji>();
-                    emoji.unified = DecodeEncodedNonAsciiCharacters(@"\u" + emoji.unified);
-                    list.Add(emoji);
+                    JArray o1 = JArray.Parse(await File.ReadAllTextAsync(_settings.EmojiFile));
+                    
+                    foreach (var item in o1)
+                    {
+                        var emoji = item.ToObject<Emoji>();
+                        emoji.unified = DecodeEncodedNonAsciiCharacters(@"\u" + emoji.unified);
+                        list.Add(emoji);
 
+                    }
+                }
+                catch(FileNotFoundException ex)
+                {
+                    _logger.LogError(ex.Message);
                 }
                 _emojis = list;
             }
