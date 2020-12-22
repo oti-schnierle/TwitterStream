@@ -1,0 +1,48 @@
+﻿@model IEnumerable<TwitterStub.Models.Metrics.Metric>
+@{
+    ViewData["Title"] = "Home Page";
+}
+
+<div class="container text-center">
+    <h1 class="display-4">TwitterStub Statistics</h1>
+    @Html.ActionLink("Refresh", "Index", "Home")  Last Refreshed: @DateTime.Now.ToLongTimeString()
+    <p>
+        <div class="menu row">
+            @foreach (var metric in Model)
+            {
+                <div class="col menu-category list-group ">
+                    <div class="menu-category-name list-group-item active">
+                        @metric.Key
+                        (@metric.Time.TotalSeconds s)
+                    </div>
+                    @{
+                        if (metric.Value is IEnumerable<TwitterStub.Models.Metrics.Metric>)
+                        {
+                            @foreach (var item in ((IEnumerable<TwitterStub.Models.Metrics.Metric>)metric.Value).ToList())
+                            {
+                                <div class="menu-item list-group-item">
+                                    <div class=" menu row">
+                                        <div class="menu-category ">
+                                            [ @item.Value ]
+                                        </div>
+                                        <div class="menu-category ">
+                                            @item.Key
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        }
+
+                        else
+                        {
+                            <div class="menu-item list-group-item">
+                                @metric.Value
+                            </div>
+                        }
+                    }
+                </div>
+            }
+        </div>
+    </p>
+</div>
+
